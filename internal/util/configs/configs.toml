@@ -1,0 +1,6 @@
+app_name = "awesome web"
+log_level = "DEBUG"
+
+[redis]
+ip = "127.0.0.1"
+port = 7381
