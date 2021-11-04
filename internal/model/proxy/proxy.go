@@ -3,11 +3,13 @@ package proxy
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"search_proxy/internal/model/objs"
 	"search_proxy/internal/model/router"
 	"search_proxy/internal/util/log"
 	"search_proxy/internal/util/request"
 	"search_proxy/internal/util/tools"
+	"sort"
 )
 
 type proxy struct {
@@ -29,46 +31,59 @@ func newProxy(groupMasters []string, groupSlaves [][]string, groupTimeout int, r
 	return px
 }
 
-func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, string) {
+func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, int, string) {
 	index := px.srt.LoadBalance(routerKey)
 	errString := "nil"
 	slavesLen := len(px.slaves)
 	type goRet struct {
-		repl objs.RecallPostingList
-		err  error
+		repl  objs.RecallPostingList
+		count int
+		err   error
 	}
 	retChan := make(chan goRet, slavesLen)
 	for _, slave := range px.slaves {
 		go func(slave []string) {
+			defer func() {
+				if err := recover(); err != nil {
+					log.Errorf("%v", err)
+				}
+			}()
+
 			url := "http://" + slave[index] + uri
-			log.Infof("trackid:%d, url:%s, body:%s", ctx.Value("trackid").(uint64), url, tools.Bytes2Str(body))
+			log.Infof("trackid:%v, url:%s, body:%s", ctx.Value("trackid"), url, tools.Bytes2Str(body))
 			//retByte, err := request.DoCall("Post", ctx, url, "application/json", body, px.timeout)
 			retByte, err := request.Post(ctx, url, "application/json", body, px.timeout)
 			if err != nil {
-				retChan <- goRet{nil, err}
+				retChan <- goRet{nil, 0, err}
 				return
 			}
-			var resp objs.RespData
-			err = json.Unmarshal(retByte, &resp)
+			var retData objs.RetData
+			err = json.Unmarshal(retByte, &retData)
 			if err != nil {
-				retChan <- goRet{nil, err}
+				retChan <- goRet{nil, 0, err}
 				return
 			}
-			repl := resp.Result.Repl
-			retChan <- goRet{repl, nil}
+			if retData.Code != 0 {
+				retChan <- goRet{nil, 0, errors.New("engine return err")}
+				return
+			}
+			retChan <- goRet{retData.Result, retData.Count, nil}
 		}(slave)
 	}
 
 	errCnt := 0
+	totalCount := 0
 	totalRepl := make(objs.RecallPostingList, 0)
 	for i := 0; i < slavesLen; i++ {
 		ret := <-retChan
 		repl := ret.repl
+		count := ret.count
 		err := ret.err
 		if err != nil {
 			errCnt++
 			errString = err.Error()
 		} else {
+			totalCount += count
 			totalRepl = append(totalRepl, repl...)
 		}
 	}
@@ -77,8 +92,9 @@ func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, 
 	} else if errCnt > 0 {
 		errString = "Some server err: " + errString
 	}
-	log.Infof("trackid:%d, repl:%v, err:%s", ctx.Value("trackid").(uint64), totalRepl, errString)
-	return totalRepl, errString
+	sort.Sort(totalRepl)
+	log.Infof("trackid:%v, repl:%v, err:%s", ctx.Value("trackid"), totalRepl, errString)
+	return totalRepl, totalCount, errString
 }
 
 func (px *proxy) addDoc(ctx context.Context, routerKey string, uri string, body []byte) ([]byte, error) {
@@ -90,7 +106,7 @@ func (px *proxy) addDoc(ctx context.Context, routerKey string, uri string, body 
 	if err != nil {
 		errString = err.Error()
 	}
-	log.Infof("trackid:%d, url:%s, body:%s, err:%s", ctx.Value("trackid").(uint64), url, tools.Bytes2Str(body), errString)
+	log.Infof("trackid:%v, url:%s, body:%s, err:%s", ctx.Value("trackid"), url, tools.Bytes2Str(body), errString)
 	return retByte, err
 }
 
@@ -103,7 +119,7 @@ func (px *proxy) delDoc(ctx context.Context, routerKey string, uri string) ([]by
 	if err != nil {
 		errString = err.Error()
 	}
-	log.Infof("trackid:%d, url:%s, err:%s", ctx.Value("trackid").(uint64), url, errString)
+	log.Infof("trackid:%v, url:%s, err:%s", ctx.Value("trackid"), url, errString)
 	return retByte, err
 }
 
@@ -116,6 +132,6 @@ func (px *proxy) docIsDel(ctx context.Context, routerKey string, uri string) ([]
 	if err != nil {
 		errString = err.Error()
 	}
-	log.Infof("trackid:%d, url:%s, err:%s", ctx.Value("trackid").(uint64), url, errString)
+	log.Infof("trackid:%v, url:%s, err:%s", ctx.Value("trackid"), url, errString)
 	return retByte, err
 }

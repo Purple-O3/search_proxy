@@ -16,18 +16,18 @@ func NewPx(groupMasters []string, groupSlaves [][]string, groupTimeout int, rout
 	idgenerator.NewIdGenerator()
 }
 
-func RetrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, string) {
+func RetrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, int, string) {
 	defer func(cost func() time.Duration) {
-		log.Infof("trackid:%d, cost: %.3f ms", ctx.Value("trackid").(uint64), float64(cost().Microseconds())/1000.0)
+		log.Infof("trackid:%v, cost: %.3f ms", ctx.Value("trackid"), float64(cost().Microseconds())/1000.0)
 	}(tools.TimeCost())
 
-	repl, errString := px.retrieveDoc(ctx, routerKey, uri, body)
-	return repl, errString
+	repl, count, errString := px.retrieveDoc(ctx, routerKey, uri, body)
+	return repl, count, errString
 }
 
 func AddDoc(ctx context.Context, routerKey string, uri string, body []byte) ([]byte, error) {
 	defer func(cost func() time.Duration) {
-		log.Infof("trackid:%d, cost: %.3f ms", ctx.Value("trackid").(uint64), float64(cost().Microseconds())/1000.0)
+		log.Infof("trackid:%v, cost: %.3f ms", ctx.Value("trackid"), float64(cost().Microseconds())/1000.0)
 	}(tools.TimeCost())
 
 	retByte, err := px.addDoc(ctx, routerKey, uri, body)
@@ -36,7 +36,7 @@ func AddDoc(ctx context.Context, routerKey string, uri string, body []byte) ([]b
 
 func DelDoc(ctx context.Context, routerKey string, uri string) ([]byte, error) {
 	defer func(cost func() time.Duration) {
-		log.Infof("trackid:%d, cost: %.3f ms", ctx.Value("trackid").(uint64), float64(cost().Microseconds())/1000.0)
+		log.Infof("trackid:%v, cost: %.3f ms", ctx.Value("trackid"), float64(cost().Microseconds())/1000.0)
 	}(tools.TimeCost())
 
 	retByte, err := px.delDoc(ctx, routerKey, uri)
@@ -45,7 +45,7 @@ func DelDoc(ctx context.Context, routerKey string, uri string) ([]byte, error) {
 
 func DocIsDel(ctx context.Context, routerKey string, uri string) ([]byte, error) {
 	defer func(cost func() time.Duration) {
-		log.Infof("trackid:%d, cost: %.3f ms", ctx.Value("trackid").(uint64), float64(cost().Microseconds())/1000.0)
+		log.Infof("trackid:%v, cost: %.3f ms", ctx.Value("trackid"), float64(cost().Microseconds())/1000.0)
 	}(tools.TimeCost())
 
 	retByte, err := px.docIsDel(ctx, routerKey, uri)

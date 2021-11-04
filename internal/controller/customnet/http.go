@@ -3,6 +3,7 @@ package customnet
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"search_proxy/internal/model/objs"
 	"search_proxy/internal/model/proxy"
@@ -64,9 +65,9 @@ func addDoc(ctx *gin.Context) {
 	retByte, err := proxy.AddDoc(newCtx, remoteIp, uri, body)
 
 	if err != nil {
-		var respData objs.RespData
-		respData.Code = -1
-		respData.Message = err.Error()
+		respData := make(map[string]interface{})
+		respData["code"] = -1
+		respData["message"] = err.Error()
 		ctx.JSON(http.StatusOK, respData)
 	} else {
 		ctx.Data(http.StatusOK, "application/json", retByte)
@@ -81,9 +82,9 @@ func delDoc(ctx *gin.Context) {
 	retByte, err := proxy.DelDoc(newCtx, remoteIp, uri)
 
 	if err != nil {
-		var respData objs.RespData
-		respData.Code = -1
-		respData.Message = err.Error()
+		respData := make(map[string]interface{})
+		respData["code"] = -1
+		respData["message"] = err.Error()
 		ctx.JSON(http.StatusOK, respData)
 	} else {
 		ctx.Data(http.StatusOK, "application/json", retByte)
@@ -98,9 +99,9 @@ func docIsDel(ctx *gin.Context) {
 	retByte, err := proxy.DocIsDel(newCtx, remoteIp, uri)
 
 	if err != nil {
-		var respData objs.RespData
-		respData.Code = -1
-		respData.Message = err.Error()
+		respData := make(map[string]interface{})
+		respData["code"] = -1
+		respData["message"] = err.Error()
 		ctx.JSON(http.StatusOK, respData)
 	} else {
 		ctx.Data(http.StatusOK, "application/json", retByte)
@@ -116,19 +117,35 @@ func retrieveDoc(ctx *gin.Context) {
 	body := buf.Bytes()
 	trackid := uint64(idgenerator.Generate())
 	newCtx := context.WithValue(ctx, "trackid", trackid)
-	repl, errString := proxy.RetrieveDoc(newCtx, remoteIp, uri, body)
+
+	repl, count, errString := proxy.RetrieveDoc(newCtx, remoteIp, uri, body)
+	replLen := len(repl)
+	m := make(map[string]interface{})
+	json.Unmarshal(body, &m)
+	offset := int(m["Offset"].(float64))
+	limit := int(m["Limit"].(float64))
+	end := offset + limit
+	if replLen < offset {
+		repl = make(objs.RecallPostingList, 0)
+	} else if replLen < end {
+		repl = repl[offset:]
+	} else if replLen >= end {
+		repl = repl[offset:end]
+	}
 
 	if len(errString) != 0 {
-		var respData objs.RespData
-		respData.Code = -1
-		respData.Message = errString
-		respData.Result.Repl = repl
+		respData := make(map[string]interface{})
+		respData["code"] = -1
+		respData["message"] = errString
+		respData["count"] = count
+		respData["result"] = repl
 		ctx.JSON(http.StatusOK, respData)
 	} else {
-		var respData objs.RespData
-		respData.Code = 0
-		respData.Message = "ok"
-		respData.Result.Repl = repl
+		respData := make(map[string]interface{})
+		respData["code"] = 0
+		respData["message"] = "ok"
+		respData["count"] = replLen
+		respData["result"] = repl
 		ctx.JSON(http.StatusOK, respData)
 	}
 }
