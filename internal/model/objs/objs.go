@@ -1,16 +1,25 @@
 package objs
 
+import "time"
+
 type Posting struct {
-	Term     string
-	Docid    uint64
-	TermFreq int
-	Offset   []int
+	FieldName string `json:"-"`
+	Term      string `json:"-"`
+	Docid     uint64
+	//TermFreq  int
+	//Offset    []int
+}
+
+type Data struct {
+	Modified  string
+	Saled     string
+	Num       int
+	CreatedAt time.Time `search_type:"keyword"`
 }
 
 type Doc struct {
-	Body  string  `json:"body"`
-	Title string  `json:"title"`
-	Price float64 `json:"price"`
+	Ident string `search_type:"keyword"`
+	Data
 }
 
 type RecallPosting struct {
@@ -20,13 +29,30 @@ type RecallPosting struct {
 
 type RecallPostingList []RecallPosting
 
-type ResultData struct {
-	Repl  RecallPostingList `json:"repl"`
-	Docid uint64            `json:"docid"`
+type RetData struct {
+	Code    int               `json:"code"`
+	Message string            `json:"message"`
+	Count   int               `json:"count"`
+	Result  RecallPostingList `json:"result"`
 }
 
-type RespData struct {
-	Code    int        `json:"code"`
-	Message string     `json:"message"`
-	Result  ResultData `json:"result"`
+//实现排序
+func (h RecallPostingList) Len() int {
+	return len(h)
+}
+
+func (h RecallPostingList) Swap(i, j int) {
+	h[i], h[j] = h[j], h[i]
+}
+
+func (h RecallPostingList) Less(i, j int) bool {
+	if h[i].Docid == h[j].Docid {
+		if h[i].FieldName == h[j].FieldName {
+			return h[i].Term < h[j].Term
+		} else {
+			return h[i].FieldName < h[j].FieldName
+		}
+	} else {
+		return h[i].Docid < h[j].Docid
+	}
 }
