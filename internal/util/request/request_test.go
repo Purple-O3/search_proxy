@@ -10,7 +10,7 @@ import (
 
 func TestRequest(t *testing.T) {
 	level := "debug"
-	filePath := "/Users/wengguan/search_code/search_file/logs/engine.log"
+	filePath := "../../../logs/engine.log"
 	maxSize := 128
 	maxBackups := 100
 	maxAge := 60

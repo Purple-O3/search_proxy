@@ -3,7 +3,6 @@ package proxy
 import (
 	"context"
 	"encoding/json"
-	"search_proxy/internal/model/objs"
 	"search_proxy/internal/util/log"
 	"search_proxy/internal/util/tools"
 	"strconv"
@@ -12,7 +11,7 @@ import (
 
 func TestAll(t *testing.T) {
 	level := "debug"
-	filePath := "/Users/wengguan/search_code/search_file/logs/proxy.log"
+	filePath := "../../../logs/proxy.log"
 	maxSize := 128
 	maxBackups := 100
 	maxAge := 60
@@ -34,27 +33,28 @@ func TestAll(t *testing.T) {
 	cxt = context.WithValue(cxt, "trackid", trackid)
 	remoteIP := "192.168.0.100"
 	uri := "/add_doc"
-	body := `{"body": "中国万里长城", "title": "五三班", "price": 5.30}`
+	body := `{"Ident":"88.199.1/bbb.def","Modified":"北京市首都机场","Saled":"成都","Num":13,"CreatedAt":"2021-11-02T16:42:21.199502+08:00"}`
 	bodyByte := tools.Str2Bytes(body)
 
 	retByte, _ := AddDoc(cxt, remoteIP, uri, bodyByte)
-	var resp objs.RespData
+	var resp map[string]interface{}
 	json.Unmarshal(retByte, &resp)
 	t.Log(resp)
 
 	uri = "/retrieve"
-	retriveBody := `{"retreive_terms":[{"term":"长城","union":true,"inter":false}],"title_must":"五三班","price_start":5.1,"price_end":5.5}`
+	retriveBody := `{"RetreiveTerms":[{"FieldName":"Modified","Term":"北京","TermCompareType":1,"Operator":"must"}],"Offset":0,"Limit":10}
+`
 	retriveBodyByte := tools.Str2Bytes(retriveBody)
-	repl, errString := RetrieveDoc(cxt, remoteIP, uri, retriveBodyByte)
-	t.Log(repl, errString)
+	repl, count, errString := RetrieveDoc(cxt, remoteIP, uri, retriveBodyByte)
+	t.Log(repl, count, errString)
 
-	id := resp.Result.Docid
+	id := uint64(resp["docid"].(float64))
 	uri = "/del_doc?docid=" + strconv.FormatUint(id, 10)
 	retByte, _ = DelDoc(cxt, remoteIP, uri)
 	json.Unmarshal(retByte, &resp)
 	t.Log(resp)
 
 	uri = "/retrieve"
-	repl, errString = RetrieveDoc(cxt, remoteIP, uri, retriveBodyByte)
-	t.Log(repl, errString)
+	repl, count, errString = RetrieveDoc(cxt, remoteIP, uri, retriveBodyByte)
+	t.Log(repl, count, errString)
 }

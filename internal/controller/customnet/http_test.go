@@ -1,14 +1,17 @@
 package customnet
 
 import (
+	"os"
+	"os/signal"
 	"search_proxy/internal/model/proxy"
 	"search_proxy/internal/util/log"
+	"syscall"
 	"testing"
 )
 
 func TestAll(t *testing.T) {
 	level := "debug"
-	filePath := "/Users/wengguan/search_code/search_file/logs/proxy.log"
+	filePath := "../../../logs/proxy.log"
 	maxSize := 128
 	maxBackups := 100
 	maxAge := 60
@@ -27,8 +30,11 @@ func TestAll(t *testing.T) {
 	ip, port := "", "7070"
 	cn := NetFactory("http")
 	cn.StartNet(ip, port)
-	c := make(chan int)
-	_ = <-c
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	<-c
+	log.CloseLogger()
+	cn.Shutdown()
 }
 
 /*

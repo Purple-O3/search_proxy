@@ -7,15 +7,18 @@ import (
 	"search_proxy/internal/model/proxy"
 	"search_proxy/internal/util/log"
 	"strconv"
+	"syscall"
 
 	"github.com/spf13/viper"
 	_ "go.uber.org/automaxprocs"
 )
 
+var cn customnet.Net
+
 func init() {
 	viper.SetConfigName("proxy")
-	viper.SetConfigType("toml")                                                    // 如果配置文件的名称中没有扩展名，则需要配置此项
-	viper.AddConfigPath("/Users/wengguan/search_code/search/search_proxy/configs") // 查找配置文件所在的路径
+	viper.SetConfigType("toml")       // 如果配置文件的名称中没有扩展名，则需要配置此项
+	viper.AddConfigPath("../configs") // 查找配置文件所在的路径
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)
@@ -50,19 +53,20 @@ func init() {
 
 	ip := viper.GetString("server.ip")
 	port := viper.GetString("server.port")
-	cn := customnet.NetFactory("http")
+	cn = customnet.NetFactory("http")
 	cn.StartNet(ip, port)
 	log.Infof("server start!!!")
 }
 
 func listenSignal() {
 	c := make(chan os.Signal, 1)
-	signal.Notify(c)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	<-c
 }
 
 func closeServer() {
 	log.CloseLogger()
+	cn.Shutdown()
 }
 
 func main() {

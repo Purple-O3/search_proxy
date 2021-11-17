@@ -8,7 +8,7 @@ import (
 func TestAll(t *testing.T) {
 	t.Log("start")
 	level := "debug"
-	filePath := "/Users/wengguan/search_code/search_file/logs/proxy.log"
+	filePath := "../../../logs/proxy.log"
 	maxSize := 128
 	maxBackups := 100
 	maxAge := 60
