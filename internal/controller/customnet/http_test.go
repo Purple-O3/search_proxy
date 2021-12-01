@@ -1,11 +1,8 @@
 package customnet
 
 import (
-	"os"
-	"os/signal"
 	"search_proxy/internal/model/proxy"
 	"search_proxy/internal/util/log"
-	"syscall"
 	"testing"
 )
 
@@ -30,9 +27,9 @@ func TestAll(t *testing.T) {
 	ip, port := "", "7070"
 	cn := NetFactory("http")
 	cn.StartNet(ip, port)
-	c := make(chan os.Signal, 1)
+	/*c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	<-c
+	<-c*/
 	log.CloseLogger()
 	cn.Shutdown()
 }
