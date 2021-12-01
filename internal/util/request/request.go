@@ -20,7 +20,8 @@ func Post(ctx context.Context, url string, contentType string, body []byte, time
 }
 
 func request(ctx context.Context, method string, url string, contentType string, body []byte, timeout int) ([]byte, error) {
-	ctx, _ = context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
+	defer cancel()
 	client := &http.Client{}
 	var bodyReader io.Reader
 	if len(body) != 0 {
