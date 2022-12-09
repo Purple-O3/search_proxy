@@ -7,14 +7,6 @@ import (
 )
 
 func TestAll(t *testing.T) {
-	level := "debug"
-	filePath := "../../../logs/proxy.log"
-	maxSize := 128
-	maxBackups := 100
-	maxAge := 60
-	compress := true
-	log.InitLogger(level, filePath, maxSize, maxBackups, maxAge, compress)
-
 	masters := []string{"127.0.0.1:7788", "127.0.0.1:7799"}
 	slaves := make([][]string, 0)
 	slave1 := []string{"127.0.0.1:7788", "127.0.0.1:7788"}

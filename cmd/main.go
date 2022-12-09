@@ -1,12 +1,15 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"search_proxy/internal/controller/customnet"
 	"search_proxy/internal/model/proxy"
 	"search_proxy/internal/util/log"
 	"strconv"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/viper"
@@ -16,9 +19,17 @@ import (
 var cn customnet.Net
 
 func init() {
-	viper.SetConfigName("proxy")
-	viper.SetConfigType("toml")       // 如果配置文件的名称中没有扩展名，则需要配置此项
-	viper.AddConfigPath("../configs") // 查找配置文件所在的路径
+	filePath := "../configs/proxy.toml"
+	fileName := filepath.Base(filePath)
+	fileNames := strings.Split(fileName, ".")
+	if len(fileNames) != 2 {
+		panic(errors.New("fileNames len not equal 2"))
+	}
+
+	vp := viper.New()
+	vp.SetConfigName(fileNames[0])
+	vp.SetConfigType(fileNames[1])
+	vp.AddConfigPath(filepath.Dir(filePath))
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(err)

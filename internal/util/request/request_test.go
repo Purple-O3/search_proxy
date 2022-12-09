@@ -2,21 +2,12 @@ package request
 
 import (
 	"context"
-	"search_proxy/internal/util/log"
 	"search_proxy/internal/util/tools"
 	"testing"
 	"time"
 )
 
 func TestRequest(t *testing.T) {
-	level := "debug"
-	filePath := "../../../logs/engine.log"
-	maxSize := 128
-	maxBackups := 100
-	maxAge := 60
-	compress := true
-	log.InitLogger(level, filePath, maxSize, maxBackups, maxAge, compress)
-
 	ctx := context.Background()
 	timeout := 100
 	ret, err := Get(ctx, "https://www.baidu.com", timeout)

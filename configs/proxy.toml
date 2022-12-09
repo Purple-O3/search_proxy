@@ -1,6 +1,6 @@
 [server]
 ip = ""
-port = "7070"
+port = 7070
 
 [log]
 level = "info"      #可能的值：debug, info, warn, error

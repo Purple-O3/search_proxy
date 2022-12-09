@@ -9,13 +9,14 @@ import (
 	"search_proxy/internal/model/proxy"
 	"search_proxy/internal/util/idgenerator"
 	"search_proxy/internal/util/log"
+	"strconv"
 
 	//	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
 type Net interface {
-	StartNet(ip string, port string)
+	StartNet(ip string, port int)
 	Shutdown()
 }
 
@@ -37,7 +38,7 @@ func newCustomHttp() *customHttp {
 	return new(customHttp)
 }
 
-func (ch *customHttp) StartNet(ip string, port string) {
+func (ch *customHttp) StartNet(ip string, port int) {
 	/*router := gin.Default()
 	equals
 	router := gin.New()
@@ -55,7 +56,7 @@ func (ch *customHttp) StartNet(ip string, port string) {
 	//pprof.Register(router)
 
 	srv := &http.Server{
-		Addr:    ip + ":" + port,
+		Addr:    ip + ":" + strconv.Itoa(port),
 		Handler: router,
 	}
 	ch.svr = srv

@@ -9,6 +9,11 @@ import (
 
 var sugarLogger *zap.SugaredLogger
 
+func init() {
+	logger, _ := zap.NewProduction()
+	sugarLogger = logger.Sugar()
+}
+
 func InitLogger(level string, filePath string, maxSize int, maxBackups int, maxAge int, compress bool) {
 	writeSyncer := getLogWriter(filePath, maxSize, maxBackups, maxAge, compress)
 	encoder := getEncoder()

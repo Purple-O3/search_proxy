@@ -7,14 +7,7 @@ import (
 
 func TestAll(t *testing.T) {
 	t.Log("start")
-	level := "debug"
-	filePath := "../../../logs/proxy.log"
-	maxSize := 128
-	maxBackups := 100
-	maxAge := 60
-	compress := true
 	var wg sync.WaitGroup
-	InitLogger(level, filePath, maxSize, maxBackups, maxAge, compress)
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go writelog(i, &wg, t)
