@@ -14,10 +14,10 @@ func init() {
 	sugarLogger = logger.Sugar()
 }
 
-func InitLogger(level string, filePath string, maxSize int, maxBackups int, maxAge int, compress bool) {
-	writeSyncer := getLogWriter(filePath, maxSize, maxBackups, maxAge, compress)
+func InitLogger(config Config) {
+	writeSyncer := getLogWriter(config.FilePath, config.MaxSize, config.MaxBackups, config.MaxAge, config.Compress)
 	encoder := getEncoder()
-	logLevel := transformLevel(level)
+	logLevel := transformLevel(config.Level)
 	atomicLevel := zap.NewAtomicLevel()
 	atomicLevel.SetLevel(logLevel)
 	core := zapcore.NewCore(encoder, writeSyncer, atomicLevel)

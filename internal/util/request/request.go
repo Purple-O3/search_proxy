@@ -10,17 +10,17 @@ import (
 	"time"
 )
 
-//TODO:长连接池
-func Get(ctx context.Context, url string, timeout int) ([]byte, error) {
+// TODO:长连接池
+func Get(ctx context.Context, url string, timeout time.Duration) ([]byte, error) {
 	return request(ctx, "GET", url, "", []byte{}, timeout)
 }
 
-func Post(ctx context.Context, url string, contentType string, body []byte, timeout int) ([]byte, error) {
+func Post(ctx context.Context, url string, contentType string, body []byte, timeout time.Duration) ([]byte, error) {
 	return request(ctx, "POST", url, contentType, body, timeout)
 }
 
-func request(ctx context.Context, method string, url string, contentType string, body []byte, timeout int) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
+func request(ctx context.Context, method string, url string, contentType string, body []byte, timeout time.Duration) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout*time.Millisecond)
 	defer cancel()
 	client := &http.Client{}
 	var bodyReader io.Reader

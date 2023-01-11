@@ -4,34 +4,35 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"search_proxy/internal/model/objs"
 	"search_proxy/internal/model/router"
+	"search_proxy/internal/objs"
 	"search_proxy/internal/util/log"
 	"search_proxy/internal/util/request"
 	"search_proxy/internal/util/tools"
 	"sort"
+	"time"
 )
 
 type proxy struct {
 	masters []string
 	slaves  [][]string
-	timeout int
+	timeout time.Duration
 	mrt     router.Router
 	srt     router.Router
 }
 
-func newProxy(groupMasters []string, groupSlaves [][]string, groupTimeout int, routerMode string) *proxy {
+func newProxy(groupConfig objs.GroupConfig, routerConfig objs.RouterConfig) *proxy {
 	px := new(proxy)
-	px.masters = groupMasters
-	px.slaves = groupSlaves
-	px.timeout = groupTimeout
-	px.mrt = router.RouterFactory(routerMode, len(groupMasters))
-	px.srt = router.RouterFactory(routerMode, len(groupSlaves[0]))
+	px.masters = groupConfig.Masters
+	px.slaves = groupConfig.Slaves
+	px.timeout = groupConfig.Timeout
+	px.mrt = router.RouterFactory(routerConfig.Model, len(groupConfig.Masters))
+	px.srt = router.RouterFactory(routerConfig.Model, len(groupConfig.Slaves[0]))
 	request.NewBreaker()
 	return px
 }
 
-func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, int, string) {
+func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, int, error) {
 	index := px.srt.LoadBalance(routerKey)
 	errString := "nil"
 	slavesLen := len(px.slaves)
@@ -94,7 +95,7 @@ func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, 
 	}
 	sort.Sort(totalRepl)
 	log.Infof("trackid:%v, repl:%v, err:%s", ctx.Value("trackid"), totalRepl, errString)
-	return totalRepl, totalCount, errString
+	return totalRepl, totalCount, errors.New(errString)
 }
 
 func (px *proxy) addDoc(ctx context.Context, routerKey string, uri string, body []byte) ([]byte, error) {

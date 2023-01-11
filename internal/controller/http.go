@@ -1,77 +1,44 @@
-package customnet
+package controller
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"net/http"
-	"search_proxy/internal/model/objs"
 	"search_proxy/internal/model/proxy"
-	"search_proxy/internal/util/idgenerator"
-	"search_proxy/internal/util/log"
-	"strconv"
+	"search_proxy/internal/objs"
+	"search_proxy/internal/util/ginwrapper"
 
-	//	"github.com/gin-contrib/pprof"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 )
 
-type Net interface {
-	StartNet(ip string, port int)
-	Shutdown()
-}
-
-func NetFactory(netType string) Net {
-	switch netType {
-	case "http":
-		return newCustomHttp()
-	//TODO case "rpc":
-	default:
-		return newCustomHttp()
+func StartNet(config objs.ServerConfig, closeFunc func()) error {
+	opts, err := ginwrapper.SetOpts(config)
+	if err != nil {
+		return err
 	}
+	return ginwrapper.GinServer(config.IP, config.Port, router(config), closeFunc, opts...)
 }
 
-type customHttp struct {
-	svr *http.Server
-}
-
-func newCustomHttp() *customHttp {
-	return new(customHttp)
-}
-
-func (ch *customHttp) StartNet(ip string, port int) {
-	/*router := gin.Default()
-	equals
-	router := gin.New()
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())*/
-
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.POST("/add_doc", addDoc)
-	router.GET("/del_doc", delDoc)
-	router.GET("/doc_isdel", docIsDel)
-	router.POST("/retrieve", retrieveDoc)
-	//性能调试
-	//pprof.Register(router)
-
-	srv := &http.Server{
-		Addr:    ip + ":" + strconv.Itoa(port),
-		Handler: router,
+func router(config objs.ServerConfig) *gin.Engine {
+	if config.Debug {
+		gin.SetMode(gin.DebugMode)
+	} else {
+		gin.SetMode(gin.ReleaseMode)
 	}
-	ch.svr = srv
-	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Errorf("%v", err)
-		}
-	}()
+	r := gin.New()
+	r.Use(ginwrapper.Recovery())
+	apiGroup := r.Group("/api/v1")
+	{
+		apiGroup.POST("/add_doc", proxy.AddDoc)
+		apiGroup.GET("/del_doc", proxy.DelDoc)
+		apiGroup.GET("/doc_isdel", proxy.DocIsDel)
+		apiGroup.POST("/retrieve", proxy.RetrieveDoc)
+	}
+	if config.Debug {
+		pprof.Register(r)
+	}
+	return r
 }
 
-func (ch *customHttp) Shutdown() {
-	ctx := context.Background()
-	ch.svr.Shutdown(ctx)
-}
-
+/*
 func addDoc(ctx *gin.Context) {
 	remoteIp := ctx.ClientIP()
 	uri := ctx.Request.RequestURI
@@ -167,4 +134,4 @@ func retrieveDoc(ctx *gin.Context) {
 		respData["result"] = repl
 		ctx.JSON(http.StatusOK, respData)
 	}
-}
+}*/

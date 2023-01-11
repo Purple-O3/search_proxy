@@ -9,7 +9,7 @@ import (
 
 var node *snowflake.Node
 
-func NewIdGenerator() {
+func init() {
 	var err error
 	randint, err := rand.Int(rand.Reader, big.NewInt(1024))
 	if err != nil {

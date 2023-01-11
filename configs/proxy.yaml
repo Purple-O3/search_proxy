@@ -1,0 +1,26 @@
+Server:
+  Name: "search_proxy"
+  IP: "127.0.0.1"
+  Port: 7070
+  Debug: false          # debug mode 开启gin debug模式和pprof
+  ReadTimeout:  1000    # http read timeout, 单位: 毫秒
+  WriteTimeout: 1000    # http write timeout, 单位: 毫秒
+  IdleTimeout:  1000    # http idle timeout, 单位: 毫秒
+  Tls:                  # tls
+    Enable: false       # tls 开关，通过该参数控制是否启用tls
+    CertFile: "../configs/ssl.crt"
+    KeyFile: "../configs/ssl.key"
+Log:
+  Type: "file"       #可能的值：file, stdout
+  Level: "debug"     #可能的值：debug, info, warn, error
+  FilePath: "../logs/proxy.log"
+  MaxSize: 128       #在进行切割之前，日志文件的最大大小（以MB为单位）
+  MaxBackups: 100    #保留旧文件的最大个数
+  MaxAge: 60         #保留旧文件的最大天数
+  Compress: true     #是否压缩/归档旧文件
+Router:
+  Mode : "poll"      #可能的值：poll, rand, hash
+Group:
+  Timeout: 80
+  Masters: ["127.0.0.1:7788", "127.0.0.1:7799"]
+  Slaves: [["127.0.0.1:7788", "127.0.0.1:7788"], ["127.0.0.1:7799", "127.0.0.1:7799"]]
