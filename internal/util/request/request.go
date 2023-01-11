@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
@@ -27,7 +26,7 @@ func request(ctx context.Context, method string, url string, contentType string,
 	if len(body) != 0 {
 		bodyReader = bytes.NewReader(body)
 	}
-	req, err := http.NewRequestWithContext(ctx, "POST", url, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +45,7 @@ func request(ctx context.Context, method string, url string, contentType string,
 		return nil, err
 	}
 	defer resp.Body.Close()
-	respByte, err := ioutil.ReadAll(resp.Body)
+	respByte, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

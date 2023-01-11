@@ -78,7 +78,7 @@ func AddDoc(ctx *gin.Context) {
 	if err != nil {
 		pxw.ErrMsg(ctx, err)
 	} else {
-		pxw.SucMsg(ctx, retByte)
+		pxw.ProxyMsg(ctx, retByte)
 	}
 }
 
@@ -95,7 +95,7 @@ func DelDoc(ctx *gin.Context) {
 	if err != nil {
 		pxw.ErrMsg(ctx, err)
 	} else {
-		pxw.SucMsg(ctx, retByte)
+		pxw.ProxyMsg(ctx, retByte)
 	}
 }
 
@@ -112,6 +112,6 @@ func DocIsDel(ctx *gin.Context) {
 	if err != nil {
 		pxw.ErrMsg(ctx, err)
 	} else {
-		pxw.SucMsg(ctx, retByte)
+		pxw.ProxyMsg(ctx, retByte)
 	}
 }

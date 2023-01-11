@@ -94,3 +94,7 @@ func (base *Base) ErrMsg(ctx *gin.Context, err error, data ...interface{}) {
 	}
 	ctx.JSON(http.StatusOK, res)
 }
+
+func (base *Base) ProxyMsg(ctx *gin.Context, retByte []byte) {
+	ctx.Data(http.StatusOK, "application/json", retByte)
+}

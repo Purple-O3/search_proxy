@@ -9,7 +9,7 @@ import (
 
 func TestRequest(t *testing.T) {
 	ctx := context.Background()
-	timeout := 100
+	timeout := time.Duration(100)
 	ret, err := Get(ctx, "https://www.baidu.com", timeout)
 	if err != nil {
 		t.Log(err)
@@ -46,7 +46,7 @@ const failedThreshold = 8
 
 func TestBreaker(t *testing.T) {
 	ctx := context.Background()
-	timeout := 100
+	timeout := time.Duration(100)
 	NewBreaker()
 	for i := 0; i < 100; i++ {
 		time.Sleep(1 * time.Millisecond)

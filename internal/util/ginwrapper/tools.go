@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"runtime"
-	"search_engine/internal/util/log"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,7 +18,7 @@ func Recovery() func(c *gin.Context) {
 				ctx.JSON(http.StatusOK, respData)
 				errBuf := make([]byte, 0, 1024)
 				errBuf = errBuf[:runtime.Stack(errBuf, false)]
-				log.Errorf("%s", string(errBuf))
+				fmt.Printf("%s", string(errBuf))
 				return
 			}
 		}()

@@ -14,7 +14,7 @@ import (
 )
 
 func start() {
-	configPath := "../configs/proxy.toml"
+	configPath := "../configs/proxy.yaml"
 	fileName := filepath.Base(configPath)
 	fileNames := strings.Split(fileName, ".")
 	if len(fileNames) != 2 {

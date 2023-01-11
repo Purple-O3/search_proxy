@@ -36,7 +36,7 @@ type RetData struct {
 	Result  RecallPostingList `json:"result"`
 }
 
-//实现排序
+// 实现排序
 func (h RecallPostingList) Len() int {
 	return len(h)
 }
@@ -55,4 +55,10 @@ func (h RecallPostingList) Less(i, j int) bool {
 	} else {
 		return h[i].Docid < h[j].Docid
 	}
+}
+
+type GoRet struct {
+	Repl  RecallPostingList
+	Count int
+	Err   error
 }

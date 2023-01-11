@@ -34,14 +34,8 @@ func newProxy(groupConfig objs.GroupConfig, routerConfig objs.RouterConfig) *pro
 
 func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, body []byte) (objs.RecallPostingList, int, error) {
 	index := px.srt.LoadBalance(routerKey)
-	errString := "nil"
 	slavesLen := len(px.slaves)
-	type goRet struct {
-		repl  objs.RecallPostingList
-		count int
-		err   error
-	}
-	retChan := make(chan goRet, slavesLen)
+	retChan := make(chan objs.GoRet, slavesLen)
 	for _, slave := range px.slaves {
 		go func(slave []string) {
 			defer func() {
@@ -55,84 +49,70 @@ func (px *proxy) retrieveDoc(ctx context.Context, routerKey string, uri string, 
 			//retByte, err := request.DoCall("Post", ctx, url, "application/json", body, px.timeout)
 			retByte, err := request.Post(ctx, url, "application/json", body, px.timeout)
 			if err != nil {
-				retChan <- goRet{nil, 0, err}
+				retChan <- objs.GoRet{nil, 0, err}
 				return
 			}
 			var retData objs.RetData
 			err = json.Unmarshal(retByte, &retData)
 			if err != nil {
-				retChan <- goRet{nil, 0, err}
+				retChan <- objs.GoRet{nil, 0, err}
 				return
 			}
 			if retData.Code != 0 {
-				retChan <- goRet{nil, 0, errors.New("engine return err")}
+				retChan <- objs.GoRet{nil, 0, errors.New("engine return err")}
 				return
 			}
-			retChan <- goRet{retData.Result, retData.Count, nil}
+			retChan <- objs.GoRet{retData.Result, retData.Count, nil}
 		}(slave)
 	}
 
+	var err error
 	errCnt := 0
 	totalCount := 0
 	totalRepl := make(objs.RecallPostingList, 0)
 	for i := 0; i < slavesLen; i++ {
 		ret := <-retChan
-		repl := ret.repl
-		count := ret.count
-		err := ret.err
-		if err != nil {
+		if ret.Err != nil {
 			errCnt++
-			errString = err.Error()
+			err = ret.Err
 		} else {
-			totalCount += count
-			totalRepl = append(totalRepl, repl...)
+			totalCount += ret.Count
+			totalRepl = append(totalRepl, ret.Repl...)
 		}
 	}
 	if errCnt == slavesLen {
-		errString = "All server err: " + errString
+		err = errors.New("All server err: " + err.Error())
 	} else if errCnt > 0 {
-		errString = "Some server err: " + errString
+		err = errors.New("Some server err: " + err.Error())
 	}
 	sort.Sort(totalRepl)
-	log.Infof("trackid:%v, repl:%v, err:%s", ctx.Value("trackid"), totalRepl, errString)
-	return totalRepl, totalCount, errors.New(errString)
+	log.Infof("trackid:%v, repl:%v, err:%v", ctx.Value("trackid"), totalRepl, err)
+	return totalRepl, totalCount, err
 }
 
 func (px *proxy) addDoc(ctx context.Context, routerKey string, uri string, body []byte) ([]byte, error) {
-	errString := "nil"
 	index := px.mrt.LoadBalance(routerKey)
 	url := "http://" + px.masters[index] + uri
 	//retByte, err := request.DoCall("Post", ctx, url, "application/json", body, px.timeout)
 	retByte, err := request.Post(ctx, url, "application/json", body, px.timeout)
-	if err != nil {
-		errString = err.Error()
-	}
-	log.Infof("trackid:%v, url:%s, body:%s, err:%s", ctx.Value("trackid"), url, tools.Bytes2Str(body), errString)
+	log.Infof("trackid:%v, url:%s, body:%s, err:%v", ctx.Value("trackid"), url, tools.Bytes2Str(body), err)
 	return retByte, err
 }
 
 func (px *proxy) delDoc(ctx context.Context, routerKey string, uri string) ([]byte, error) {
-	errString := "nil"
 	index := px.mrt.LoadBalance(routerKey)
 	url := "http://" + px.masters[index] + uri
 	//retByte, err := request.DoCall("Get", ctx, url, px.timeout)
 	retByte, err := request.Get(ctx, url, px.timeout)
-	if err != nil {
-		errString = err.Error()
-	}
-	log.Infof("trackid:%v, url:%s, err:%s", ctx.Value("trackid"), url, errString)
+	log.Infof("trackid:%v, url:%s, err:%v", ctx.Value("trackid"), url, err)
 	return retByte, err
 }
 
 func (px *proxy) docIsDel(ctx context.Context, routerKey string, uri string) ([]byte, error) {
-	errString := "nil"
 	index := px.mrt.LoadBalance(routerKey)
 	url := "http://" + px.masters[index] + uri
 	//retByte, err := request.DoCall("Get", ctx, url, px.timeout)
 	retByte, err := request.Get(ctx, url, px.timeout)
-	if err != nil {
-		errString = err.Error()
-	}
-	log.Infof("trackid:%v, url:%s, err:%s", ctx.Value("trackid"), url, errString)
+	log.Infof("trackid:%v, url:%s, err:%v", ctx.Value("trackid"), url, err)
 	return retByte, err
 }

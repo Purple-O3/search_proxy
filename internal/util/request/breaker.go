@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//conf
+// conf
 const retryInterval = 500
 const retryCnt = 50
 const failedThreshold = 20
@@ -52,14 +52,14 @@ func DoCall(reqName string, args ...interface{}) ([]byte, error) {
 	if reqName == "get" {
 		ctx := args[0].(context.Context)
 		url := args[1].(string)
-		timeout := args[2].(int)
+		timeout := args[2].(time.Duration)
 		respByte, err = Get(ctx, url, timeout)
 	} else if reqName == "post" {
 		ctx := args[0].(context.Context)
 		url := args[1].(string)
 		contentType := args[2].(string)
 		body := args[3].([]byte)
-		timeout := args[4].(int)
+		timeout := args[4].(time.Duration)
 		respByte, err = Post(ctx, url, contentType, body, timeout)
 	}
 	bk.afterCall(st, err)

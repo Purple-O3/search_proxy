@@ -30,7 +30,7 @@ func router(config objs.ServerConfig) *gin.Engine {
 		apiGroup.POST("/add_doc", proxy.AddDoc)
 		apiGroup.GET("/del_doc", proxy.DelDoc)
 		apiGroup.GET("/doc_isdel", proxy.DocIsDel)
-		apiGroup.POST("/retrieve", proxy.RetrieveDoc)
+		apiGroup.POST("/retrieve_doc", proxy.RetrieveDoc)
 	}
 	if config.Debug {
 		pprof.Register(r)
