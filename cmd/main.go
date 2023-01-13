@@ -5,7 +5,7 @@ import (
 	"search_proxy/internal/model/proxy"
 	"search_proxy/internal/objs"
 	"search_proxy/internal/util/log"
-	"search_proxy/internal/util/viperwrapper"
+	"search_proxy/internal/util/tools"
 
 	_ "go.uber.org/automaxprocs"
 )
@@ -13,7 +13,7 @@ import (
 func start() {
 	configPath := "../configs/proxy.yaml"
 	var config objs.Config
-	err := viperwrapper.DecodeConfig(configPath, &config)
+	err := tools.DecodeConfig(configPath, &config)
 	if err != nil {
 		panic(err)
 	}
