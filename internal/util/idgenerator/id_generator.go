@@ -2,7 +2,10 @@ package idgenerator
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
+	"os"
+	"strconv"
 
 	"github.com/bwmarrin/snowflake"
 )
@@ -15,9 +18,15 @@ func init() {
 	if err != nil {
 		panic("snowflake randint failed")
 	}
-	node, err = snowflake.NewNode(randint.Int64())
+	randomNub := randint.Int64()
+	node, err = snowflake.NewNode(randomNub)
 	if err != nil {
 		panic("snowflake init failed")
+	}
+
+	fmt.Printf("!!!warning, please check random number in every machine\n!!!this machine's random nuber is %d.\n", randomNub)
+	if err = os.WriteFile("warning_check_randomnub", []byte(strconv.FormatInt(randomNub, 10)), 0666); err != nil {
+		panic(err)
 	}
 }
 

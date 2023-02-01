@@ -18,7 +18,7 @@ func Recovery() func(c *gin.Context) {
 				ctx.JSON(http.StatusOK, respData)
 				errBuf := make([]byte, 0, 1024)
 				errBuf = errBuf[:runtime.Stack(errBuf, false)]
-				fmt.Printf("%s", string(errBuf))
+				fmt.Printf("%s\n", string(errBuf))
 				return
 			}
 		}()
