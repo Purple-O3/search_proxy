@@ -30,7 +30,7 @@ func GinServer(ip string, port int, r *gin.Engine, closeFunc func(), opts ...Opt
 	go func() {
 		fmt.Printf("server start!!!\n")
 		if err := httpServer.start(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("%v", err)
+			fmt.Printf("%v\n", err)
 			quit <- syscall.SIGQUIT
 		}
 	}()
